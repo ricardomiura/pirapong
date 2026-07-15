@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Pirapong — Fila</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --table:#123f31; --table-2:#0d2f24; --felt:#1a5641;
+    --line:#eef0e6; --ball:#ff6a2b; --ball-soft:#ff8a54;
+    --muted:#7fa896; --danger:#e2604f; --ink:#0b241c;
+    --ok:#4ade80;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:radial-gradient(120% 90% at 50% -10%, var(--felt) 0%, var(--table) 42%, var(--table-2) 100%);
+    color:var(--line); min-height:100dvh; display:flex; justify-content:center;
+    padding:18px 16px calc(96px + env(safe-area-inset-bottom));
+  }
+  .wrap{width:100%;max-width:520px;}
+
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .ball{width:16px;height:16px;border-radius:50%;background:var(--ball);box-shadow:0 0 0 3px rgba(255,106,43,.18);}
+  .brand h1{font-family:'Oswald',sans-serif;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:19px;line-height:1;}
+  .brand span{display:block;font-size:10px;letter-spacing:.22em;color:var(--muted);font-weight:600;margin-top:3px;}
+  .head-right{display:flex;align-items:center;gap:10px;}
+  .status{display:flex;align-items:center;gap:6px;font:600 10px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted);}
+  .status[data-state="ok"]{color:var(--ok);}   .status[data-state="ok"]::before{background:var(--ok);box-shadow:0 0 8px var(--ok);}
+  .status[data-state="err"]{color:var(--danger);} .status[data-state="err"]::before{background:var(--danger);}
+  .status[data-state="wait"]::before{animation:blink 1s ease-in-out infinite;}
+  @keyframes blink{50%{opacity:.25;}}
+  .reset{background:transparent;border:1px solid rgba(238,240,230,.22);color:var(--muted);font:600 11px/1 'Inter';letter-spacing:.08em;text-transform:uppercase;padding:9px 12px;border-radius:9px;cursor:pointer;}
+  .reset:active{background:rgba(238,240,230,.06);}
+
+  .table{position:relative;background:var(--felt);border:2px solid rgba(238,240,230,.28);border-radius:16px;padding:5px;display:grid;grid-template-columns:1fr 1fr;box-shadow:inset 0 0 0 1px rgba(238,240,230,.06),0 18px 40px -22px #000;overflow:hidden;}
+  .table::before{content:"";position:absolute;top:8px;bottom:8px;left:50%;width:2px;transform:translateX(-50%);background:repeating-linear-gradient(var(--line) 0 6px,transparent 6px 11px);opacity:.65;z-index:2;}
+  .table::after{content:"";position:absolute;top:50%;left:50%;width:11px;height:11px;border-radius:50%;transform:translate(-50%,-50%);background:var(--ball);z-index:3;box-shadow:0 0 14px 2px rgba(255,106,43,.55);animation:bob 2.4s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translate(-50%,-58%);}50%{transform:translate(-50%,-42%);}}
+
+  .side{position:relative;padding:22px 14px 16px;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;}
+  .side .tag{font:600 10px/1 'Inter';letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+  .side .name{font-family:'Oswald',sans-serif;font-weight:700;text-transform:uppercase;font-size:clamp(26px,8vw,40px);line-height:.98;letter-spacing:.01em;word-break:break-word;flex:1;display:flex;align-items:center;}
+  .side .name.empty{color:var(--muted);font-size:clamp(15px,4.4vw,19px);font-weight:600;letter-spacing:.02em;}
+  .win{width:100%;border:none;border-radius:11px;cursor:pointer;background:var(--ball);color:#2a0d00;font:700 14px/1 'Oswald';letter-spacing:.1em;text-transform:uppercase;padding:14px 8px;transition:transform .08s ease,filter .15s ease;}
+  .win:active{transform:scale(.97);filter:brightness(1.08);}
+  .win[disabled]{background:rgba(238,240,230,.1);color:var(--muted);cursor:default;}
+  .pips{display:flex;align-items:center;gap:6px;margin:0 0 12px;min-height:12px;}
+  .pips span{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--muted);}
+  .pips span.on{background:var(--ball);border-color:var(--ball);}
+  .pips em{font-style:normal;font:700 9px/1 'Inter';letter-spacing:.12em;text-transform:uppercase;color:var(--ball-soft);margin-left:3px;}
+
+  .rule{display:flex;align-items:center;gap:8px;justify-content:center;margin:14px 2px 4px;color:var(--muted);font-size:12px;text-align:center;}
+  .rule svg{flex:none;}
+
+  .queue-head{display:flex;align-items:baseline;justify-content:space-between;margin:22px 4px 10px;}
+  .queue-head h2{font-family:'Oswald',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:14px;color:var(--line);}
+  .queue-head .count{font:600 12px/1 'Inter';color:var(--muted);}
+  ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
+  li{display:flex;align-items:center;gap:12px;background:rgba(238,240,230,.05);border:1px solid rgba(238,240,230,.08);border-radius:12px;padding:12px 12px 12px 10px;}
+  li.next{border-color:rgba(255,106,43,.5);background:rgba(255,106,43,.08);}
+  .rank{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;background:rgba(238,240,230,.1);color:var(--muted);}
+  li.next .rank{background:var(--ball);color:#2a0d00;}
+  .qname{flex:1;font-weight:600;font-size:17px;word-break:break-word;}
+  .qtag{font:600 9px/1 'Inter';letter-spacing:.16em;text-transform:uppercase;color:var(--ball-soft);margin-right:2px;}
+  .rm{flex:none;background:transparent;border:none;cursor:pointer;color:var(--muted);width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:18px;}
+  .rm:active{background:rgba(226,96,79,.14);color:var(--danger);}
+  .empty-q{text-align:center;color:var(--muted);font-size:14px;padding:18px 8px;}
+
+  .add{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--table-2) 62%,transparent);display:flex;justify-content:center;}
+  .add-inner{width:100%;max-width:520px;display:flex;gap:9px;}
+  .add input{flex:1;min-width:0;border:1.5px solid rgba(238,240,230,.2);background:rgba(9,26,20,.72);backdrop-filter:blur(6px);color:var(--line);border-radius:12px;padding:15px;font:500 16px/1 'Inter';}
+  .add input::placeholder{color:var(--muted);}
+  .add input:focus{outline:none;border-color:var(--ball);}
+  .add button{flex:none;border:none;border-radius:12px;cursor:pointer;background:var(--ball);color:#2a0d00;font:700 14px/1 'Oswald';letter-spacing:.08em;text-transform:uppercase;padding:0 20px;transition:transform .08s ease;}
+  .add button:active{transform:scale(.96);}
+  :focus-visible{outline:2px solid var(--ball);outline-offset:2px;}
+
+  /* overlay das regras */
+  .overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(6,20,15,.72);backdrop-filter:blur(4px);}
+  .overlay[hidden]{display:none;}
+  .sheet{width:100%;max-width:480px;max-height:82dvh;overflow:auto;background:var(--table);border:1.5px solid rgba(238,240,230,.16);border-radius:18px;padding:22px 22px 24px;box-shadow:0 30px 60px -20px #000;}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .sheet-head h2{font-family:'Oswald',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:20px;}
+  .sheet-close{background:transparent;border:none;color:var(--muted);cursor:pointer;width:36px;height:36px;border-radius:9px;font-size:18px;}
+  .sheet-close:active{background:rgba(238,240,230,.08);}
+  .sheet .sub{color:var(--muted);font-size:12px;margin-bottom:16px;}
+  .rules-list{list-style:none;counter-reset:r;display:flex;flex-direction:column;gap:12px;}
+  .rules-list li{counter-increment:r;position:relative;padding-left:40px;font-size:15px;line-height:1.4;}
+  .rules-list li::before{content:counter(r);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:7px;background:var(--ball);color:#2a0d00;font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;display:grid;place-items:center;}
+  @media (prefers-reduced-motion:reduce){.table::after,.status[data-state="wait"]::before{animation:none;}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="ball" aria-hidden="true"></div>
+        <div><h1>Pirapong</h1><span>Vencedor fica na mesa</span></div>
+      </div>
+      <div class="head-right">
+        <span class="status" id="status" data-state="wait">conectando</span>
+        <button class="reset" id="rulesBtn">Regras</button>
+        <button class="reset" id="resetBtn">Zerar</button>
+      </div>
+    </header>
+
+    <div class="table" id="table" aria-label="Mesa - jogando agora">
+      <div class="side" id="side0"></div>
+      <div class="side" id="side1"></div>
+    </div>
+
+    <div class="rule" aria-hidden="true">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7fa896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      Vencedor fica, mas joga no máximo 2 seguidas. Depois volta pro fim da fila.
+    </div>
+
+    <div class="queue-head">
+      <h2>Próximos na fila</h2>
+      <span class="count" id="count">0</span>
+    </div>
+    <ul id="queue"></ul>
+  </div>
+
+  <div class="add">
+    <div class="add-inner">
+      <input id="nameInput" type="text" inputmode="text" maxlength="24" placeholder="Digite seu nome" aria-label="Seu nome" autocomplete="off" />
+      <button id="addBtn">Entrar</button>
+    </div>
+  </div>
+  <div class="overlay" id="rulesOverlay" hidden>
+    <div class="sheet">
+      <div class="sheet-head">
+        <h2>Regras da mesa</h2>
+        <button class="sheet-close" id="rulesClose" aria-label="Fechar">✕</button>
+      </div>
+      <p class="sub">Pra mesa durar e o rolê seguir de boa.</p>
+      <ol class="rules-list">
+        <li>Crianças são bem-vindas, mas um adulto sempre monta e desmonta a mesa.</li>
+        <li>Sempre buscar as bolinhas.</li>
+        <li>Nada de comidas ou bebidas sobre a mesa — nada quente, nada frio.</li>
+        <li>Não subir na mesa nem apoiar peso.</li>
+        <li>Sempre cobrir a mesa quando não estiver em uso.</li>
+        <li>Respeitar os horários do Cantim e as atividades do local.</li>
+        <li>Cuidar ao máximo do convívio com os vizinhos — gritos e música controlados.</li>
+      </ol>
+    </div>
+  </div>
+
+<script type="module">
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  1. CONEXÃO — a "linha telefônica" pro seu Supabase           ║
+// ╚══════════════════════════════════════════════════════════════╝
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://zjgrjzvjkufevqxtqnhq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_YxP8ZanXuCnruNc0QpUP8g_MCZrxtac'; // pública, protegida pelo RLS
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const CAP = 2;                                   // máximo de partidas seguidas
+let state = { playing:[null,null], plays:[0,0], queue:[] };
+let saving = false;
+
+const statusEl = document.getElementById('status');
+const setStatus = (s, txt) => { statusEl.dataset.state = s; statusEl.textContent = txt; };
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  2. LER e ESCREVER a fila no banco (substitui o window.storage)║
+// ╚══════════════════════════════════════════════════════════════╝
+async function load(){
+  const { data, error } = await sb
+    .from('queue_state')     // a tabela
+    .select('state')         // só a coluna 'state'
+    .eq('id', 1)             // a linha única (id = 1)
+    .single();               // 1 resultado, não uma lista
+  if(error){ setStatus('err','sem conexão'); console.error(error); return; }
+  state = data.state;
+  if(!Array.isArray(state.plays)) state.plays = [0,0];
+  setStatus('ok','no ar');
+}
+async function save(){
+  saving = true;
+  const { error } = await sb
+    .from('queue_state')
+    .update({ state, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+  if(error){ setStatus('err','erro ao salvar'); console.error(error); }
+  saving = false;
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  LÓGICA DO JOGO — idêntica à versão anterior                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+function fillSlots(){
+  for(let i=0;i<2;i++){
+    if(!state.playing[i] && state.queue.length){
+      state.playing[i] = state.queue.shift();
+      state.plays[i] = 0;                        // quem entra começa do zero
+    }
+  }
+}
+function addPlayer(name){
+  name = (name||'').trim().replace(/\s+/g,' ');
+  if(!name) return false;
+  state.queue.push(name); fillSlots(); commit(); return true;
+}
+function win(slot){
+  const other = slot===0?1:0;
+  const winner = state.playing[slot];
+  if(!winner || !state.playing[other]) return;   // precisa de 2 jogando
+  state.plays[slot] = (state.plays[slot]||0) + 1; // fechou mais uma partida
+  const loser = state.playing[other];             // perdedor sempre sai
+  if(loser) state.queue.push(loser);
+  state.playing[other] = null; state.plays[other] = 0;
+  if(state.plays[slot] >= CAP){                    // bateu o limite: sai mesmo vencendo
+    state.queue.push(winner);
+    state.playing[slot] = null; state.plays[slot] = 0;
+  }
+  fillSlots(); commit();
+}
+function removeAt(i){ state.queue.splice(i,1); fillSlots(); commit(); }
+function reset(){ state = {playing:[null,null], plays:[0,0], queue:[]}; commit(); }
+function commit(){ render(); save(); }            // desenha na hora + salva no banco
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  RENDER — idêntico à versão anterior                          ║
+// ╚══════════════════════════════════════════════════════════════╝
+function slotHTML(i){
+  const el = document.getElementById('side'+i);
+  const name = state.playing[i];
+  const other = state.playing[i===0?1:0];
+  const canWin = !!name && !!other;
+  const p = state.plays[i]||0;
+  let pips = '';
+  if(name){
+    const last = p >= CAP-1;
+    pips = '<div class="pips"><span class="'+(p>=1?'on':'')+'"></span><span class="'+(p>=2?'on':'')+'"></span>'+(last?'<em>última se vencer</em>':'')+'</div>';
+  }
+  el.innerHTML =
+    '<div class="tag">Jogando</div>' +
+    (name ? '<div class="name">'+esc(name)+'</div>' : '<div class="name empty">Aguardando<br>jogador</div>') +
+    pips +
+    '<button class="win" data-win="'+i+'" '+(canWin?'':'disabled')+'>Venceu</button>';
+}
+function render(){
+  slotHTML(0); slotHTML(1);
+  const ul = document.getElementById('queue');
+  document.getElementById('count').textContent = state.queue.length;
+  if(!state.queue.length){
+    ul.innerHTML = '<div class="empty-q">Ninguém esperando. Coloque seu nome aí embaixo.</div>';
+  } else {
+    ul.innerHTML = state.queue.map((n,idx)=>
+      '<li class="'+(idx===0?'next':'')+'"><span class="rank">'+(idx+1)+'</span><span class="qname">'+esc(n)+'</span>'+(idx===0?'<span class="qtag">Próximo</span>':'')+'<button class="rm" data-rm="'+idx+'" aria-label="Tirar '+esc(n)+' da fila">✕</button></li>'
+    ).join('');
+  }
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// eventos
+document.getElementById('table').addEventListener('click', e=>{ const b=e.target.closest('[data-win]'); if(b&&!b.disabled) win(+b.dataset.win); });
+document.getElementById('queue').addEventListener('click', e=>{ const b=e.target.closest('[data-rm]'); if(b) removeAt(+b.dataset.rm); });
+const input = document.getElementById('nameInput');
+function submit(){ if(addPlayer(input.value)){ input.value=''; input.focus(); } }
+document.getElementById('addBtn').addEventListener('click', submit);
+input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+document.getElementById('resetBtn').addEventListener('click', ()=>{ if(confirm('Zerar a mesa e a fila inteira?')) reset(); });
+
+// abrir/fechar as regras
+const overlay = document.getElementById('rulesOverlay');
+document.getElementById('rulesBtn').addEventListener('click', ()=> overlay.hidden = false);
+document.getElementById('rulesClose').addEventListener('click', ()=> overlay.hidden = true);
+overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.hidden = true; });
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  3. REALTIME — o banco avisa TODOS os celulares ao vivo       ║
+// ╚══════════════════════════════════════════════════════════════╝
+function subscribe(){
+  sb.channel('queue-updates')
+    .on('postgres_changes',
+        { event:'UPDATE', schema:'public', table:'queue_state' },
+        payload => {                               // chegou uma mudança de outro aparelho
+          state = payload.new.state;
+          if(!Array.isArray(state.plays)) state.plays = [0,0];
+          render();                                // redesenha, sem refresh
+        })
+    .subscribe();
+}
+
+// start
+(async ()=>{
+  await load();
+  fillSlots();
+  render();
+  subscribe();
+})();
+</script>
+</body>
+</html>
