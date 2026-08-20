@@ -94,6 +94,81 @@
   .rules-list{list-style:none;counter-reset:r;display:flex;flex-direction:column;gap:12px;}
   .rules-list li{counter-increment:r;position:relative;padding-left:40px;font-size:15px;line-height:1.4;}
   .rules-list li::before{content:counter(r);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:7px;background:var(--ball);color:#2a0d00;font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;display:grid;place-items:center;}
+
+  /* ══ Abas: Fila | Torneio ═══════════════════════════════════════ */
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:rgba(0,0,0,.20);border:1px solid rgba(238,240,230,.13);border-radius:12px;padding:4px;margin-bottom:14px;}
+  .tabs button{background:transparent;border:0;color:var(--muted);font:700 12px/1 'Inter';letter-spacing:.12em;text-transform:uppercase;padding:11px 8px;border-radius:9px;cursor:pointer;}
+  .tabs button[aria-selected="true"]{background:var(--felt);color:var(--line);box-shadow:0 3px 12px -6px #000;}
+
+  /* ══ Torneio ════════════════════════════════════════════════════ */
+  .t-card{background:rgba(0,0,0,.16);border:1px solid rgba(238,240,230,.13);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .t-card > h2{font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:15px;margin-bottom:3px;}
+  .t-sub{font-size:12px;color:var(--muted);line-height:1.5;}
+  .t-vazio{text-align:center;color:var(--muted);font-size:13px;padding:26px 10px;line-height:1.6;}
+
+  .t-topo{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .chip{display:inline-block;font:700 9px/1 'Inter';letter-spacing:.14em;text-transform:uppercase;padding:6px 9px;border-radius:999px;background:rgba(238,240,230,.10);color:var(--muted);white-space:nowrap;}
+  .chip[data-s="inscricoes"]{background:rgba(255,106,43,.16);color:var(--ball-soft);}
+  .chip[data-s="grupos"],.chip[data-s="mata_mata"]{background:rgba(74,222,128,.14);color:var(--ok);}
+  .chip[data-s="encerrado"]{background:rgba(238,240,230,.10);color:var(--muted);}
+
+  /* Formulários e botões do torneio */
+  .t-campo{display:block;margin-bottom:10px;}
+  .t-campo span{display:block;font:600 10px/1 'Inter';letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .t-campo input{width:100%;background:rgba(0,0,0,.28);border:1px solid rgba(238,240,230,.18);color:var(--line);border-radius:10px;padding:12px;font:500 15px/1 'Inter';}
+  .t-campo input:focus{outline:none;border-color:var(--ball);}
+  .btn{width:100%;background:var(--ball);color:#2a0d00;border:0;border-radius:11px;padding:14px;font:700 13px/1 'Inter';letter-spacing:.09em;text-transform:uppercase;cursor:pointer;}
+  .btn:active{background:var(--ball-soft);}
+  .btn[disabled]{opacity:.4;cursor:default;}
+  .btn-2{background:transparent;border:1px solid rgba(238,240,230,.22);color:var(--muted);}
+  .btn-2:active{background:rgba(238,240,230,.06);}
+  .btn-perigo{background:transparent;border:1px solid rgba(226,96,79,.45);color:var(--danger);}
+  .t-acoes{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+
+  /* Lista de inscritos */
+  .t-lista{list-style:none;}
+  .t-lista li{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid rgba(238,240,230,.08);}
+  .t-lista li:last-child{border-bottom:0;}
+  .t-lista .rank{width:22px;font-family:'Oswald',sans-serif;font-size:13px;color:var(--muted);flex:none;}
+  .t-lista .qname{flex:1;font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .t-lista .rm{background:transparent;border:0;color:var(--muted);font-size:15px;padding:6px 8px;cursor:pointer;flex:none;}
+
+  /* Grupos e classificação */
+  .g-nome{font-family:'Oswald',sans-serif;font-weight:700;letter-spacing:.10em;text-transform:uppercase;font-size:13px;color:var(--ball-soft);margin-bottom:9px;}
+  table.tab{width:100%;border-collapse:collapse;margin-bottom:12px;}
+  table.tab th{font:600 9px/1 'Inter';letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 6px 7px;}
+  table.tab th.n,table.tab td.n{text-align:center;width:34px;}
+  table.tab td{padding:8px 6px;border-top:1px solid rgba(238,240,230,.08);font-size:14px;}
+  table.tab tr.passa td{color:var(--ok);font-weight:600;}
+  table.tab tr.passa td:first-child::before{content:"▸ ";color:var(--ok);}
+  .empate{color:var(--ball-soft);font-size:11px;margin:-4px 0 10px;line-height:1.5;}
+
+  /* Partidas */
+  .p-lista{display:flex;flex-direction:column;gap:7px;}
+  .p{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:7px;background:rgba(0,0,0,.20);border:1px solid rgba(238,240,230,.09);border-radius:10px;padding:8px;}
+  .p button{background:transparent;border:1px solid rgba(238,240,230,.16);color:var(--line);border-radius:8px;padding:10px 8px;font:500 13px/1.25 'Inter';cursor:pointer;min-height:40px;overflow:hidden;text-overflow:ellipsis;}
+  .p button:disabled{cursor:default;}
+  .p button.venceu{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.45);color:var(--ok);font-weight:700;}
+  .p button.perdeu{opacity:.42;}
+  .p .x{font:700 9px/1 'Inter';color:var(--muted);letter-spacing:.1em;}
+  .p .vago{color:var(--muted);font-style:italic;border-style:dashed;}
+
+  /* Chave do mata-mata: colunas por fase, rolando na horizontal */
+  .chave{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;}
+  .chave .fase{flex:0 0 200px;display:flex;flex-direction:column;justify-content:space-around;gap:10px;}
+  .chave .fase-nome{font:700 9px/1 'Inter';letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;text-align:center;}
+  .chave .p{grid-template-columns:1fr;gap:4px;}
+  .chave .p .x{display:none;}
+
+  .campeao{text-align:center;padding:22px 12px;}
+  .campeao .tag{font:700 10px/1 'Inter';letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  .campeao .nome{font-family:'Oswald',sans-serif;font-weight:700;font-size:30px;letter-spacing:.03em;color:var(--ball);line-height:1.1;}
+
+  /* Barra do organizador */
+  .org{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:13px;border-top:1px solid rgba(238,240,230,.10);}
+  .org span{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .org button{flex:none;width:auto;padding:9px 13px;font-size:11px;}
+
   @media (prefers-reduced-motion:reduce){.table::after,.status[data-state="wait"]::before{animation:none;}}
 </style>
 </head>
@@ -111,6 +186,12 @@
       </div>
     </header>
 
+    <nav class="tabs" role="tablist">
+      <button id="tabFila" role="tab" aria-selected="true" data-rota="/">Fila</button>
+      <button id="tabTorneio" role="tab" aria-selected="false" data-rota="/torneio">Torneio</button>
+    </nav>
+
+    <section id="viewFila">
     <div class="table" id="table" aria-label="Mesa - jogando agora">
       <div class="side" id="side0"></div>
       <div class="side" id="side1"></div>
@@ -126,9 +207,12 @@
       <span class="count" id="count">0</span>
     </div>
     <ul id="queue"></ul>
+    </section>
+
+    <section id="viewTorneio" hidden><div id="tApp"></div></section>
   </div>
 
-  <div class="add">
+  <div class="add" id="barraFila">
     <div class="add-inner">
       <input id="nameInput" type="text" inputmode="text" maxlength="24" placeholder="Digite seu nome" aria-label="Seu nome" autocomplete="off" />
       <button id="addBtn">Entrar</button>
@@ -292,12 +376,461 @@ function subscribe(){
     .subscribe();
 }
 
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  TORNEIO — grupos + mata-mata                                 ║
+// ╚══════════════════════════════════════════════════════════════╝
+const tApp = document.getElementById('tApp');
+const LETRAS = ['A','B','C','D'];
+const ORDEM_FASES = ['oitavas','quartas','semi','final'];
+const ROTULO = {oitavas:'Oitavas', quartas:'Quartas', semi:'Semifinal', final:'Final'};
+
+let sessao = null, torneio = null, inscritos = [], partidas = [];
+
+const ehOrganizador = () => !!(sessao && torneio && torneio.organizador === sessao.user.id);
+const nomeDe = id => { const i = inscritos.find(x => x.id === id); return i ? i.nome : null; };
+const erroT = e => { console.error(e); alert('Deu erro: ' + (e.message || e)); };
+const fmtData = d => d ? d.split('-').reverse().slice(0,2).join('/') : '';
+
+// ── Login do organizador (Google, igual ao piracanga-app) ───────
+async function iniciarAuth(){
+  const { data } = await sb.auth.getSession();
+  sessao = data.session;
+  sb.auth.onAuthStateChange((_e, s) => { sessao = s; renderTorneio(); });
+}
+
+// ── Ler tudo do torneio mais recente ────────────────────────────
+async function carregarTorneio(){
+  const { data: t } = await sb.from('torneios')
+    .select('*').order('criado_em', {ascending:false}).limit(1).maybeSingle();
+  torneio = t || null;
+  if(!torneio){ inscritos = []; partidas = []; return; }
+  const [ri, rp] = await Promise.all([
+    sb.from('inscricoes').select('*').eq('torneio_id', torneio.id).order('criado_em'),
+    sb.from('partidas').select('*').eq('torneio_id', torneio.id).order('ordem')
+  ]);
+  inscritos = ri.data || []; partidas = rp.data || [];
+}
+async function recarregar(){ await carregarTorneio(); renderTorneio(); }
+
+// ── Classificação de um grupo ───────────────────────────────────
+// Calculada na hora a partir das partidas — nunca fica dessincronizada.
+// Desempate: vitórias contando SÓ os jogos entre os próprios empatados.
+// Com dois, isso é o confronto direto; com três ou mais, é a mini-tabela —
+// e é ela que revela um ciclo (A ganha de B, B de C, C de A).
+function miniTabela(bloco, jogos){
+  const ids = new Set(bloco.map(b => b.id));
+  return new Map(bloco.map(b => [b.id, jogos.filter(p => p.vencedor === b.id &&
+    ids.has(p.jogador_a === b.id ? p.jogador_b : p.jogador_a)).length]));
+}
+
+function classificacao(letra){
+  const jogos = partidas.filter(p => p.fase === 'grupo' && p.grupo === letra);
+  const base = inscritos.filter(i => i.grupo === letra).map(i => {
+    const feitos = jogos.filter(p => p.vencedor && (p.jogador_a === i.id || p.jogador_b === i.id));
+    return { id:i.id, nome:i.nome, j:feitos.length,
+             v:feitos.filter(p => p.vencedor === i.id).length,
+             d:feitos.filter(p => p.vencedor !== i.id).length };
+  });
+  // Primeiro por vitórias; dentro de cada empate, pela mini-tabela.
+  const saida = [];
+  for(const v of [...new Set(base.map(l => l.v))].sort((a, b) => b - a)){
+    const bloco = base.filter(l => l.v === v);
+    if(bloco.length > 1){
+      const mini = miniTabela(bloco, jogos);
+      bloco.sort((x, y) => mini.get(y.id) - mini.get(x.id));
+    }
+    saida.push(...bloco);
+  }
+  return saida;
+}
+const grupoCompleto = letra =>
+  partidas.filter(p => p.fase === 'grupo' && p.grupo === letra).every(p => p.vencedor);
+const gruposDoTorneio = () => [...new Set(inscritos.map(i => i.grupo).filter(Boolean))].sort();
+
+// Só o vencedor é gravado, então um empate de vitórias que o confronto
+// direto não resolve fica indefinido. Avisamos em vez de fingir uma ordem.
+function empateNaFronteira(linhas, letra){
+  if(linhas.length < 3 || !grupoCompleto(letra)) return false;
+  if(linhas[1].v !== linhas[2].v) return false;
+  const v = linhas[1].v;
+  const bloco = linhas.filter(l => l.v === v);
+  // Quantas das 2 vagas ainda estão em jogo dentro deste bloco empatado.
+  const vagas = 2 - linhas.findIndex(l => l.v === v);
+  if(vagas <= 0 || vagas >= bloco.length) return false;   // o bloco todo passa, ou todo cai
+  const mini = miniTabela(bloco, partidas.filter(p => p.fase === 'grupo' && p.grupo === letra));
+  const ord = bloco.map(b => mini.get(b.id)).sort((a, b) => b - a);
+  return ord[vagas - 1] === ord[vagas];   // o corte cai no meio de um empate
+}
+
+// ── Sorteio dos grupos ──────────────────────────────────────────
+function embaralhar(a){
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+// Até 20 inscritos: grupos de 3 a 5, no máximo 4 grupos.
+const qtdGrupos = n => n < 6 ? 1 : n < 10 ? 2 : n < 15 ? 3 : 4;
+
+async function sortear(){
+  const n = inscritos.length;
+  if(n < 4) return alert('Precisa de pelo menos 4 inscritos para sortear.');
+  if(!confirm('Sortear ' + qtdGrupos(n) + ' grupo(s) com ' + n + ' inscritos? As inscrições fecham.')) return;
+  const g = qtdGrupos(n);
+  const comGrupo = embaralhar(inscritos.slice()).map((ins, k) => ({ id:ins.id, grupo:LETRAS[k % g] }));
+  for(const u of comGrupo){
+    const { error } = await sb.from('inscricoes').update({ grupo:u.grupo }).eq('id', u.id);
+    if(error) return erroT(error);
+  }
+  const novas = [];
+  for(let gi = 0; gi < g; gi++){
+    const letra = LETRAS[gi];
+    const ids = comGrupo.filter(u => u.grupo === letra).map(u => u.id);
+    let ordem = 0;
+    for(let i = 0; i < ids.length; i++)
+      for(let j = i + 1; j < ids.length; j++)
+        novas.push({ torneio_id:torneio.id, fase:'grupo', grupo:letra,
+                     ordem:ordem++, jogador_a:ids[i], jogador_b:ids[j] });
+  }
+  const ins = await sb.from('partidas').insert(novas);
+  if(ins.error) return erroT(ins.error);
+  const up = await sb.from('torneios').update({ status:'grupos' }).eq('id', torneio.id);
+  if(up.error) return erroT(up.error);
+  await recarregar();
+}
+
+// ── Geração da chave do mata-mata ───────────────────────────────
+// Ordem clássica: o 1º pega o último, o 2º o penúltimo, e assim por diante.
+function ordemDeChave(n){
+  let o = [1];
+  while(o.length < n){ const m = o.length * 2 + 1; o = o.flatMap(x => [x, m - x]); }
+  return o;
+}
+const fasesDaChave = () => ORDEM_FASES.filter(f => partidas.some(p => p.fase === f));
+
+async function gerarChave(){
+  const letras = gruposDoTorneio();
+  if(!letras.every(grupoCompleto)) return alert('Ainda faltam partidas de grupo.');
+  const primeiros = [], segundos = [];
+  for(const l of letras){
+    const c = classificacao(l);
+    if(c[0]) primeiros.push({ ...c[0], grupo:l });
+    if(c[1]) segundos.push({ ...c[1], grupo:l });
+  }
+  primeiros.sort((a, b) => b.v - a.v);
+  segundos.sort((a, b) => b.v - a.v);
+  const cabecas = [...primeiros, ...segundos];
+  if(cabecas.length < 2) return alert('Classificados de menos para montar a chave.');
+
+  const S = Math.max(2, 2 ** Math.ceil(Math.log2(cabecas.length)));
+  // Sobrou vaga? Vira bye, e o bye cai nos primeiros de melhor campanha.
+  const vagas = ordemDeChave(S).map(seed => cabecas[seed - 1] || null);
+  const pares = [];
+  for(let i = 0; i < vagas.length; i += 2) pares.push([vagas[i], vagas[i + 1]]);
+
+  // Ninguém do mesmo grupo se reencontra logo na estreia: troca com outro par.
+  for(let i = 0; i < pares.length; i++){
+    const [a, b] = pares[i];
+    if(!a || !b || a.grupo !== b.grupo) continue;
+    for(let j = 0; j < pares.length; j++){
+      if(j === i) continue;
+      const [c, d] = pares[j];
+      if(d && d.grupo !== a.grupo && (!c || c.grupo !== b.grupo)){
+        pares[i][1] = d; pares[j][1] = b; break;
+      }
+    }
+  }
+
+  const fases = ORDEM_FASES.slice(ORDEM_FASES.length - Math.log2(S));
+  const novas = pares.map(([a, b], i) => ({
+    torneio_id:torneio.id, fase:fases[0], ordem:i,
+    jogador_a:a ? a.id : null, jogador_b:b ? b.id : null,
+    vencedor:(a && !b) ? a.id : null            // bye já sai decidido
+  }));
+  for(let f = 1; f < fases.length; f++)
+    for(let i = 0; i < S / 2 ** (f + 1); i++)
+      novas.push({ torneio_id:torneio.id, fase:fases[f], ordem:i });
+
+  const ins = await sb.from('partidas').insert(novas);
+  if(ins.error) return erroT(ins.error);
+  const up = await sb.from('torneios').update({ status:'mata_mata' }).eq('id', torneio.id);
+  if(up.error) return erroT(up.error);
+  await carregarTorneio();
+  // Empurra os byes para a fase seguinte.
+  for(const p of partidas.filter(x => x.fase === fases[0] && x.vencedor))
+    await definirVencedor(p.id, p.vencedor, true);
+  await recarregar();
+}
+
+// ── Lançar resultado ────────────────────────────────────────────
+async function definirVencedor(partidaId, vencedorId, silencioso){
+  const p = partidas.find(x => x.id === partidaId);
+  if(!p) return;
+  const { error } = await sb.from('partidas').update({ vencedor:vencedorId }).eq('id', p.id);
+  if(error) return erroT(error);
+  if(p.fase !== 'grupo'){
+    const fs = fasesDaChave(), i = fs.indexOf(p.fase);
+    if(i >= 0 && i < fs.length - 1){
+      const alvo = partidas.find(x => x.fase === fs[i + 1] && x.ordem === Math.floor(p.ordem / 2));
+      if(alvo){
+        const campo = p.ordem % 2 === 0 ? 'jogador_a' : 'jogador_b';
+        const r = await sb.from('partidas').update({ [campo]:vencedorId }).eq('id', alvo.id);
+        if(r.error) return erroT(r.error);
+      }
+    } else if(p.fase === 'final'){
+      await sb.from('torneios').update({ status:'encerrado' }).eq('id', torneio.id);
+    }
+  }
+  if(!silencioso) await recarregar();
+}
+
+// ── Ações ───────────────────────────────────────────────────────
+async function criarTorneio(nome, data, ate){
+  if(!nome.trim()) return alert('Dá um nome pro torneio.');
+  const { error } = await sb.from('torneios').insert({
+    nome:nome.trim(), data:data || null,
+    inscricoes_ate: ate ? ate + 'T23:59:59' : null,
+    organizador: sessao.user.id
+  });
+  if(error) return erroT(error);
+  await recarregar();
+}
+async function inscrever(nome){
+  nome = (nome || '').trim().replace(/\s+/g, ' ');
+  if(!nome) return;
+  const { error } = await sb.from('inscricoes').insert({ torneio_id:torneio.id, nome });
+  if(error) return erroT(error.code === '23505' ? new Error('Esse nome já está inscrito.') : error);
+  await recarregar();
+}
+async function desinscrever(id){
+  const { error } = await sb.from('inscricoes').delete().eq('id', id);
+  if(error) return erroT(error);
+  await recarregar();
+}
+async function apagarTorneio(){
+  if(!confirm('Apagar o torneio inteiro, com inscritos e partidas? Não dá pra desfazer.')) return;
+  const { error } = await sb.from('torneios').delete().eq('id', torneio.id);
+  if(error) return erroT(error);
+  await recarregar();
+}
+
+// ── Desenho da tela do torneio ──────────────────────────────────
+const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+const campo = (id, rot, tipo, ph) => '<label class="t-campo"><span>' + rot + '</span>'
+  + '<input id="' + id + '" type="' + tipo + '"' + (ph ? ' placeholder="' + ph + '"' : '')
+  + (tipo === 'text' ? ' maxlength="40" autocomplete="off"' : '') + ' /></label>';
+
+function renderTorneio(){
+  if(document.getElementById('viewTorneio').hidden) return;
+  let h = '';
+  if(!torneio){
+    h = semTorneioHTML();
+  } else {
+    if(torneio.status === 'encerrado') h += campeaoHTML();
+    h += cabecalhoHTML();
+    if(torneio.status === 'inscricoes'){
+      h += inscricoesHTML();
+    } else {
+      h += gruposHTML();
+      if(torneio.status === 'grupos'){
+        if(ehOrganizador()){
+          const pronto = gruposDoTorneio().every(grupoCompleto);
+          h += '<div class="t-card"><h2>Mata-mata</h2><p class="t-sub">'
+            + (pronto ? 'Todos os grupos terminaram. Pode montar a chave.'
+                      : 'Assim que todas as partidas de grupo forem lançadas, a chave é liberada.')
+            + '</p><div class="t-acoes"><button class="btn" data-acao="chave"'
+            + (pronto ? '' : ' disabled') + '>Gerar chave</button></div></div>';
+        }
+      } else {
+        h += chaveHTML();
+      }
+    }
+  }
+  h += orgHTML();
+  tApp.innerHTML = h;
+}
+
+function semTorneioHTML(){
+  if(!sessao)
+    return '<div class="t-card"><div class="t-vazio">Nenhum torneio rolando agora.<br>'
+         + 'Quem for organizar entra com o Google aqui embaixo e cria.</div></div>';
+  return '<div class="t-card"><h2>Novo torneio</h2>'
+    + '<p class="t-sub">Você fica como organizador — só você sorteia e lança os resultados.</p>'
+    + '<div style="margin-top:13px">'
+    + campo('tNome', 'Nome', 'text', 'Ex.: Torneio do Cantim')
+    + campo('tData', 'Data do torneio', 'date', '')
+    + campo('tAte', 'Inscrições até', 'date', '')
+    + '<button class="btn" data-acao="criar">Criar torneio</button></div></div>';
+}
+
+function cabecalhoHTML(){
+  const st = {inscricoes:'Inscrições abertas', grupos:'Fase de grupos',
+              mata_mata:'Mata-mata', encerrado:'Encerrado'}[torneio.status];
+  return '<div class="t-card"><div class="t-topo"><div>'
+    + '<h2>' + esc(torneio.nome) + '</h2><p class="t-sub">'
+    + (torneio.data ? 'Dia ' + fmtData(torneio.data) : 'Sem data marcada')
+    + (torneio.status === 'inscricoes' && torneio.inscricoes_ate
+        ? ' · inscrições até ' + fmtData(torneio.inscricoes_ate.slice(0, 10)) : '')
+    + '</p></div><span class="chip" data-s="' + torneio.status + '">' + st + '</span></div></div>';
+}
+
+function textoSorteio(n){
+  if(n < 4) return 'Precisa de pelo menos 4 inscritos para sortear.';
+  const g = qtdGrupos(n), base = Math.floor(n / g), resto = n % g;
+  return n + ' inscritos viram ' + g + (g > 1 ? ' grupos de ' : ' grupo de ')
+    + (resto ? base + ' ou ' + (base + 1) : base) + '. Passam os 2 primeiros de cada.';
+}
+
+function inscricoesHTML(){
+  const n = inscritos.length;
+  let h = '<div class="t-card"><div class="t-topo"><h2>Inscritos</h2>'
+        + '<span class="chip">' + n + '</span></div>';
+  h += n
+    ? '<ul class="t-lista">' + inscritos.map((i, k) =>
+        '<li><span class="rank">' + (k + 1) + '</span><span class="qname">' + esc(i.nome) + '</span>'
+        + '<button class="rm" data-tirar="' + i.id + '" aria-label="Tirar ' + esc(i.nome) + '">✕</button></li>'
+      ).join('') + '</ul>'
+    : '<div class="t-vazio">Ninguém inscrito ainda. Seja o primeiro.</div>';
+  h += '<div style="margin-top:13px">'
+    + '<label class="t-campo"><span>Entrar no torneio</span>'
+    + '<input id="tNovoNome" type="text" maxlength="24" placeholder="Seu nome" autocomplete="off" /></label>'
+    + '<button class="btn" data-acao="inscrever">Inscrever</button></div></div>';
+  if(ehOrganizador())
+    h += '<div class="t-card"><h2>Sortear as chaves</h2>'
+      + '<p class="t-sub">' + textoSorteio(n) + '</p>'
+      + '<div class="t-acoes"><button class="btn" data-acao="sortear"'
+      + (n < 4 ? ' disabled' : '') + '>Sortear grupos</button></div></div>';
+  return h;
+}
+
+function ladoHTML(p, jid){
+  if(!jid) return '<button class="vago" disabled>a definir</button>';
+  const cls = p.vencedor ? (p.vencedor === jid ? 'venceu' : 'perdeu') : '';
+  const pode = ehOrganizador() && p.jogador_a && p.jogador_b;
+  return '<button class="' + cls + '"'
+    + (pode ? ' data-venceu="' + p.id + '|' + jid + '"' : ' disabled')
+    + '>' + esc(nomeDe(jid) || '?') + '</button>';
+}
+const partidaHTML = p =>
+  '<div class="p">' + ladoHTML(p, p.jogador_a) + '<span class="x">vs</span>' + ladoHTML(p, p.jogador_b) + '</div>';
+
+function gruposHTML(){
+  return gruposDoTorneio().map(letra => {
+    const linhas = classificacao(letra);
+    let h = '<div class="t-card"><div class="g-nome">Grupo ' + letra + '</div>'
+      + '<table class="tab"><thead><tr><th>Jogador</th>'
+      + '<th class="n">J</th><th class="n">V</th><th class="n">D</th></tr></thead><tbody>'
+      + linhas.map((l, k) => '<tr class="' + (k < 2 ? 'passa' : '') + '"><td>' + esc(l.nome) + '</td>'
+        + '<td class="n">' + l.j + '</td><td class="n">' + l.v + '</td><td class="n">' + l.d + '</td></tr>').join('')
+      + '</tbody></table>';
+    if(empateNaFronteira(linhas, letra))
+      h += '<p class="empate">⚠ Empate na 2ª vaga que o confronto direto não resolve — '
+         + 'a ordem acima é arbitrária, decidam no par ou ímpar.</p>';
+    h += '<div class="p-lista">'
+      + partidas.filter(p => p.fase === 'grupo' && p.grupo === letra).map(partidaHTML).join('')
+      + '</div></div>';
+    return h;
+  }).join('');
+}
+
+function chaveHTML(){
+  const fs = fasesDaChave();
+  if(!fs.length) return '';
+  return '<div class="t-card"><h2>Mata-mata</h2><div class="chave">'
+    + fs.map(f => '<div class="fase"><div class="fase-nome">' + ROTULO[f] + '</div>'
+        + partidas.filter(p => p.fase === f).sort((a, b) => a.ordem - b.ordem).map(partidaHTML).join('')
+        + '</div>').join('')
+    + '</div></div>';
+}
+
+function campeaoHTML(){
+  const fin = partidas.find(p => p.fase === 'final');
+  if(!fin || !fin.vencedor) return '';
+  return '<div class="t-card campeao"><div class="tag">Campeão</div>'
+    + '<div class="nome">' + esc(nomeDe(fin.vencedor) || '') + '</div></div>';
+}
+
+function orgHTML(){
+  if(!sessao)
+    return '<div class="org"><span>É você quem organiza?</span>'
+         + '<button class="btn btn-2" data-acao="entrar">Entrar com Google</button></div>';
+  let h = '<div class="org"><span>' + esc(sessao.user.email || 'conectado') + '</span>'
+        + '<button class="btn btn-2" data-acao="sair">Sair</button></div>';
+  if(ehOrganizador())
+    h = '<div class="t-card"><div class="t-acoes">'
+      + '<button class="btn btn-perigo" data-acao="apagar">Apagar torneio</button></div></div>' + h;
+  return h;
+}
+
+// ── Eventos do torneio ──────────────────────────────────────────
+tApp.addEventListener('click', async e => {
+  const v = e.target.closest('[data-venceu]');
+  if(v){ const [pid, jid] = v.dataset.venceu.split('|'); return definirVencedor(pid, jid); }
+  const t = e.target.closest('[data-tirar]');
+  if(t) return desinscrever(t.dataset.tirar);
+  const b = e.target.closest('[data-acao]');
+  if(!b || b.disabled) return;
+  switch(b.dataset.acao){
+    case 'entrar':
+      // O provedor devolve com o próprio hash, então marcamos a volta aqui.
+      sessionStorage.setItem('voltarProTorneio', '1');
+      return sb.auth.signInWithOAuth({ provider:'google',
+        options:{ redirectTo: location.origin + location.pathname } });
+    case 'sair':      await sb.auth.signOut(); return recarregar();
+    case 'criar':     return criarTorneio(val('tNome'), val('tData'), val('tAte'));
+    case 'inscrever': return inscrever(val('tNovoNome'));
+    case 'sortear':   return sortear();
+    case 'chave':     return gerarChave();
+    case 'apagar':    return apagarTorneio();
+  }
+});
+tApp.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && e.target.id === 'tNovoNome') inscrever(e.target.value);
+});
+
+// ── Roteador: #/ é a fila, #/torneio é o torneio ────────────────
+function aplicarRota(){
+  const emTorneio = (location.hash || '').replace(/^#/, '') === '/torneio';
+  document.getElementById('viewFila').hidden = emTorneio;
+  document.getElementById('viewTorneio').hidden = !emTorneio;
+  document.getElementById('barraFila').style.display = emTorneio ? 'none' : '';
+  document.getElementById('resetBtn').hidden = emTorneio;
+  document.getElementById('tabFila').setAttribute('aria-selected', String(!emTorneio));
+  document.getElementById('tabTorneio').setAttribute('aria-selected', String(emTorneio));
+  if(emTorneio) renderTorneio();
+}
+window.addEventListener('hashchange', aplicarRota);
+document.querySelector('.tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-rota]');
+  if(b) location.hash = '#' + b.dataset.rota;
+});
+
+// ── Realtime do torneio ─────────────────────────────────────────
+let pendente = null;
+const recarregarLogo = () => { clearTimeout(pendente); pendente = setTimeout(recarregar, 250); };
+function assinarTorneio(){
+  sb.channel('torneio-updates')
+    .on('postgres_changes', {event:'*', schema:'public', table:'torneios'},   recarregarLogo)
+    .on('postgres_changes', {event:'*', schema:'public', table:'inscricoes'}, recarregarLogo)
+    .on('postgres_changes', {event:'*', schema:'public', table:'partidas'},   recarregarLogo)
+    .subscribe();
+}
+
 // start
 (async ()=>{
   await load();
   fillSlots();
   render();
   subscribe();
+  await iniciarAuth();
+  await carregarTorneio();
+  if(sessionStorage.getItem('voltarProTorneio')){
+    sessionStorage.removeItem('voltarProTorneio');
+    location.hash = '#/torneio';
+  }
+  aplicarRota();
+  assinarTorneio();
 })();
 </script>
 </body>
