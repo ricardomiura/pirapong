@@ -145,7 +145,13 @@
 
   /* Partidas */
   .p-lista{display:flex;flex-direction:column;gap:7px;}
-  .p{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:7px;background:rgba(0,0,0,.20);border:1px solid rgba(238,240,230,.09);border-radius:10px;padding:8px;}
+  .p{display:flex;flex-direction:column;gap:7px;background:rgba(0,0,0,.20);border:1px solid rgba(238,240,230,.09);border-radius:10px;padding:8px;}
+  .p-lados{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:7px;}
+  .placar{display:flex;gap:4px;padding-top:1px;}
+  .placar button{flex:1;background:rgba(238,240,230,.06);border:0;color:var(--muted);border-radius:7px;padding:7px 2px;font:600 11px/1 'Inter';cursor:pointer;}
+  .placar button.sel{background:rgba(74,222,128,.16);color:var(--ok);font-weight:700;}
+  .placar button.limpa{flex:0 0 30px;color:var(--danger);}
+  .placar-fixo{font:700 11px/1 'Inter';color:var(--muted);letter-spacing:.06em;text-align:center;padding-top:2px;}
   .p button{background:transparent;border:1px solid rgba(238,240,230,.16);color:var(--line);border-radius:8px;padding:10px 8px;font:500 13px/1.25 'Inter';cursor:pointer;min-height:40px;overflow:hidden;text-overflow:ellipsis;}
   .p button:disabled{cursor:default;}
   .p button.venceu{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.45);color:var(--ok);font-weight:700;}
@@ -157,7 +163,7 @@
   .chave{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;}
   .chave .fase{flex:0 0 200px;display:flex;flex-direction:column;justify-content:space-around;gap:10px;}
   .chave .fase-nome{font:700 9px/1 'Inter';letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;text-align:center;}
-  .chave .p{grid-template-columns:1fr;gap:4px;}
+  .chave .p-lados{grid-template-columns:1fr;gap:4px;}
   .chave .p .x{display:none;}
 
   .campeao{text-align:center;padding:22px 12px;}
@@ -434,22 +440,42 @@ async function recarregar(){ await carregarTorneio(); renderTorneio(); }
 
 // ── Classificação de um grupo ───────────────────────────────────
 // Calculada na hora a partir das partidas — nunca fica dessincronizada.
-// Desempate: vitórias contando SÓ os jogos entre os próprios empatados.
-// Com dois, isso é o confronto direto; com três ou mais, é a mini-tabela —
-// e é ela que revela um ciclo (A ganha de B, B de C, C de A).
+
+// De que lado da partida este jogador está — ou null se nem jogou.
+const ladoDe = (p, id) => p.jogador_a === id ? 'a' : p.jogador_b === id ? 'b' : null;
+const temPlacar = p => p.sets_a != null && p.sets_b != null;
+// Saldo de sets do jogador nesta partida (positivo = ganhou mais sets).
+const saldoNa = (p, id) => { const l = ladoDe(p, id);
+  return l === 'a' ? p.sets_a - p.sets_b : p.sets_b - p.sets_a; };
+
+// Desempate, na ordem da regra: contando SÓ os jogos entre os próprios
+// empatados, primeiro vitórias, depois saldo de sets. Com dois, "vitórias
+// entre eles" é o confronto direto; com três ou mais, expõe o ciclo.
 function miniTabela(bloco, jogos){
   const ids = new Set(bloco.map(b => b.id));
-  return new Map(bloco.map(b => [b.id, jogos.filter(p => p.vencedor === b.id &&
-    ids.has(p.jogador_a === b.id ? p.jogador_b : p.jogador_a)).length]));
+  return new Map(bloco.map(b => {
+    let v = 0, saldo = 0;
+    for(const p of jogos){
+      if(!p.vencedor || !ladoDe(p, b.id)) continue;
+      const outro = p.jogador_a === b.id ? p.jogador_b : p.jogador_a;
+      if(!ids.has(outro)) continue;              // só o que é entre empatados
+      if(p.vencedor === b.id) v++;
+      if(temPlacar(p)) saldo += saldoNa(p, b.id);
+    }
+    return [b.id, { v, saldo }];
+  }));
 }
 
 function classificacao(letra){
   const jogos = partidas.filter(p => p.fase === 'grupo' && p.grupo === letra);
   const base = inscritos.filter(i => i.grupo === letra).map(i => {
-    const feitos = jogos.filter(p => p.vencedor && (p.jogador_a === i.id || p.jogador_b === i.id));
+    const feitos = jogos.filter(p => p.vencedor && ladoDe(p, i.id));
+    // 's' é o saldo geral, só para mostrar na tabela; o desempate usa o
+    // saldo dentro do bloco empatado, que é o critério correto.
     return { id:i.id, nome:i.nome, j:feitos.length,
              v:feitos.filter(p => p.vencedor === i.id).length,
-             d:feitos.filter(p => p.vencedor !== i.id).length };
+             d:feitos.filter(p => p.vencedor !== i.id).length,
+             s:feitos.filter(temPlacar).reduce((t, p) => t + saldoNa(p, i.id), 0) };
   });
   // Primeiro por vitórias; dentro de cada empate, pela mini-tabela.
   const saida = [];
@@ -457,7 +483,8 @@ function classificacao(letra){
     const bloco = base.filter(l => l.v === v);
     if(bloco.length > 1){
       const mini = miniTabela(bloco, jogos);
-      bloco.sort((x, y) => mini.get(y.id) - mini.get(x.id));
+      bloco.sort((x, y) => (mini.get(y.id).v - mini.get(x.id).v)
+                        || (mini.get(y.id).saldo - mini.get(x.id).saldo));
     }
     saida.push(...bloco);
   }
@@ -478,11 +505,13 @@ function empateNaFronteira(linhas, letra){
   const vagas = 2 - linhas.findIndex(l => l.v === v);
   if(vagas <= 0 || vagas >= bloco.length) return false;   // o bloco todo passa, ou todo cai
   const mini = miniTabela(bloco, partidas.filter(p => p.fase === 'grupo' && p.grupo === letra));
-  const ord = bloco.map(b => mini.get(b.id)).sort((a, b) => b - a);
-  return ord[vagas - 1] === ord[vagas];   // o corte cai no meio de um empate
+  const ord = bloco.map(b => mini.get(b.id)).sort((a, b) => (b.v - a.v) || (b.saldo - a.saldo));
+  // O corte cai no meio de um empate que nem as vitórias entre eles nem o
+  // saldo de sets desfazem.
+  const x = ord[vagas - 1], y = ord[vagas];
+  return x.v === y.v && x.saldo === y.saldo;
 }
 
-// ── Sorteio dos grupos ──────────────────────────────────────────
 function embaralhar(a){
   for(let i = a.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
@@ -490,6 +519,26 @@ function embaralhar(a){
   }
   return a;
 }
+
+// A ordem que vale para montar a chave. Se o empate na 2ª vaga não fecha
+// nem com saldo de sets, e o organizador autorizou, sorteia — mas só entre
+// os que estão EXATAMENTE empatados, cada um caindo numa das vagas que o
+// próprio empate já ocupava. Quem o critério separou não é mexido.
+function ordemFinal(letra, sortear){
+  const linhas = classificacao(letra);
+  if(!sortear || !empateNaFronteira(linhas, letra)) return linhas;
+  const v = linhas[1].v;
+  const mini = miniTabela(linhas.filter(l => l.v === v),
+                          partidas.filter(p => p.fase === 'grupo' && p.grupo === letra));
+  const chave = l => mini.get(l.id).v + ':' + mini.get(l.id).saldo;
+  const alvo = chave(linhas[1]);
+  const empatados = l => l.v === v && chave(l) === alvo;
+  const sorteados = embaralhar(linhas.filter(empatados));
+  let i = 0;
+  return linhas.map(l => empatados(l) ? sorteados[i++] : l);
+}
+
+// ── Sorteio dos grupos ──────────────────────────────────────────
 // Até 20 inscritos: grupos de 3 a 5, no máximo 4 grupos.
 const qtdGrupos = n => n < 6 ? 1 : n < 10 ? 2 : n < 15 ? 3 : 4;
 
@@ -532,9 +581,18 @@ const fasesDaChave = () => ORDEM_FASES.filter(f => partidas.some(p => p.fase ===
 async function gerarChave(){
   const letras = gruposDoTorneio();
   if(!letras.every(grupoCompleto)) return alert('Ainda faltam partidas de grupo.');
+  // Nunca classificar alguém em silêncio: ou o critério decide, ou o
+  // organizador autoriza o sorteio sabendo que é sorteio.
+  const travados = letras.filter(l => empateNaFronteira(classificacao(l), l));
+  if(travados.length && !confirm(
+      'Empate na 2ª vaga do Grupo ' + travados.join(' e ') + '.\n\n'
+      + 'Nem os jogos entre eles nem o saldo de sets desfazem. Se ainda faltar '
+      + 'registrar placar nessas partidas, cancele e registre primeiro — é o que '
+      + 'resolve na maioria das vezes.\n\n'
+      + 'Sortear quem passa e montar a chave?')) return;
   const primeiros = [], segundos = [];
   for(const l of letras){
-    const c = classificacao(l);
+    const c = ordemFinal(l, true);
     if(c[0]) primeiros.push({ ...c[0], grupo:l });
     if(c[1]) segundos.push({ ...c[1], grupo:l });
   }
@@ -587,7 +645,10 @@ async function gerarChave(){
 async function definirVencedor(partidaId, vencedorId, silencioso){
   const p = partidas.find(x => x.id === partidaId);
   if(!p) return;
-  const { error } = await sb.from('partidas').update({ vencedor:vencedorId }).eq('id', p.id);
+  const campos = { vencedor:vencedorId };
+  // Trocou o vencedor? O placar antigo passa a contradizer o resultado.
+  if(p.vencedor && p.vencedor !== vencedorId){ campos.sets_a = null; campos.sets_b = null; }
+  const { error } = await sb.from('partidas').update(campos).eq('id', p.id);
   if(error) return erroT(error);
   if(p.fase !== 'grupo'){
     const fs = fasesDaChave(), i = fs.indexOf(p.fase);
@@ -603,6 +664,20 @@ async function definirVencedor(partidaId, vencedorId, silencioso){
     }
   }
   if(!silencioso) await recarregar();
+}
+
+// Grava o placar sempre na perspectiva dos lados a/b da partida, para o
+// número não depender de quem venceu.
+async function definirPlacar(partidaId, ganhos, perdidos){
+  const p = partidas.find(x => x.id === partidaId);
+  if(!p || !p.vencedor) return;
+  const vencedorEhA = p.vencedor === p.jogador_a;
+  const campos = ganhos == null ? { sets_a:null, sets_b:null }
+    : vencedorEhA ? { sets_a:ganhos, sets_b:perdidos }
+                  : { sets_a:perdidos, sets_b:ganhos };
+  const { error } = await sb.from('partidas').update(campos).eq('id', p.id);
+  if(error) return erroT(error);
+  await recarregar();
 }
 
 // ── Ações ───────────────────────────────────────────────────────
@@ -811,21 +886,49 @@ function ladoHTML(p, jid){
     + (pode ? ' data-venceu="' + p.id + '|' + jid + '"' : ' disabled')
     + '>' + esc(nomeDe(jid) || '?') + '</button>';
 }
+// Placares possíveis, do vencedor para o perdedor (melhor de 5 e de 3).
+const PLACARES = [[3,0],[3,1],[3,2],[2,0],[2,1]];
+const placarDe = p => !temPlacar(p) ? null
+  : (p.vencedor === p.jogador_a ? p.sets_a + '×' + p.sets_b : p.sets_b + '×' + p.sets_a);
+
+// Opcional de propósito: o vencedor já foi gravado no toque anterior. O
+// placar só entra para desempatar grupo, então não trava ninguém.
+function placarHTML(p){
+  if(!p.vencedor) return '';
+  const atual = placarDe(p);
+  if(!ehOrganizador()) return atual ? '<div class="placar-fixo">' + atual + '</div>' : '';
+  return '<div class="placar">'
+    + PLACARES.map(([g, q]) => '<button data-placar="' + p.id + '|' + g + '|' + q + '"'
+        + (atual === g + '×' + q ? ' class="sel"' : '') + '>' + g + '×' + q + '</button>').join('')
+    + (atual ? '<button class="limpa" data-placar="' + p.id + '||" aria-label="Limpar placar">✕</button>' : '')
+    + '</div>';
+}
+
 const partidaHTML = p =>
-  '<div class="p">' + ladoHTML(p, p.jogador_a) + '<span class="x">vs</span>' + ladoHTML(p, p.jogador_b) + '</div>';
+  '<div class="p"><div class="p-lados">'
+  + ladoHTML(p, p.jogador_a) + '<span class="x">vs</span>' + ladoHTML(p, p.jogador_b)
+  + '</div>' + placarHTML(p) + '</div>';
 
 function gruposHTML(){
   return gruposDoTorneio().map(letra => {
     const linhas = classificacao(letra);
+    const jogos = partidas.filter(p => p.fase === 'grupo' && p.grupo === letra);
+    const comSets = jogos.some(temPlacar);      // só mostra saldo se houver placar
     let h = '<div class="t-card"><div class="g-nome">Grupo ' + letra + '</div>'
       + '<table class="tab"><thead><tr><th>Jogador</th>'
-      + '<th class="n">J</th><th class="n">V</th><th class="n">D</th></tr></thead><tbody>'
+      + '<th class="n">J</th><th class="n">V</th><th class="n">D</th>'
+      + (comSets ? '<th class="n">S</th>' : '') + '</tr></thead><tbody>'
       + linhas.map((l, k) => '<tr class="' + (k < 2 ? 'passa' : '') + '"><td>' + esc(l.nome) + '</td>'
-        + '<td class="n">' + l.j + '</td><td class="n">' + l.v + '</td><td class="n">' + l.d + '</td></tr>').join('')
+        + '<td class="n">' + l.j + '</td><td class="n">' + l.v + '</td><td class="n">' + l.d + '</td>'
+        + (comSets ? '<td class="n">' + (l.s > 0 ? '+' + l.s : l.s) + '</td>' : '') + '</tr>').join('')
       + '</tbody></table>';
     if(empateNaFronteira(linhas, letra))
-      h += '<p class="empate">⚠ Empate na 2ª vaga que o confronto direto não resolve — '
-         + 'a ordem acima é arbitrária, decidam no par ou ímpar.</p>';
+      h += '<p class="empate">⚠ Empate na 2ª vaga que os jogos entre eles não desfazem. '
+         + 'A ordem acima é arbitrária e a chave fica travada — registre o placar em sets '
+         + 'das partidas desses jogadores para desempatar pelo saldo.</p>';
+    else if(comSets)
+      h += '<p class="t-sub" style="margin:-4px 0 10px">S = saldo de sets. '
+         + 'Empate é desfeito pelos jogos entre os próprios empatados.</p>';
     h += '<div class="p-lista">'
       + partidas.filter(p => p.fase === 'grupo' && p.grupo === letra).map(partidaHTML).join('')
       + '</div></div>';
@@ -891,6 +994,11 @@ tApp.addEventListener('click', async e => {
     return pintarCalendario(id);
   }
 
+  const pl = e.target.closest('[data-placar]');
+  if(pl){
+    const [pid, g, q] = pl.dataset.placar.split('|');
+    return definirPlacar(pid, g === '' ? null : Number(g), q === '' ? null : Number(q));
+  }
   const v = e.target.closest('[data-venceu]');
   if(v){ const [pid, jid] = v.dataset.venceu.split('|'); return definirVencedor(pid, jid); }
   const t = e.target.closest('[data-tirar]');
