@@ -164,6 +164,26 @@
   .campeao .tag{font:700 10px/1 'Inter';letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
   .campeao .nome{font-family:'Oswald',sans-serif;font-weight:700;font-size:30px;letter-spacing:.03em;color:var(--ball);line-height:1.1;}
 
+  /* Calendário embutido (troca o input type=date, que é ruim no desktop) */
+  .cal-botao{width:100%;background:rgba(0,0,0,.28);border:1px solid rgba(238,240,230,.18);color:var(--line);border-radius:10px;padding:12px;font:500 15px/1 'Inter';display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;text-align:left;}
+  .cal-botao.vazio{color:var(--muted);}
+  .cal-botao svg{flex:none;opacity:.65;}
+  .cal-botao[aria-expanded="true"]{border-color:var(--ball);}
+  .cal{margin-top:8px;background:rgba(0,0,0,.30);border:1px solid rgba(238,240,230,.14);border-radius:12px;padding:11px;}
+  .cal-topo{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+  .cal-topo strong{font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:13px;}
+  .cal-nav{background:transparent;border:1px solid rgba(238,240,230,.18);color:var(--line);border-radius:8px;width:34px;height:34px;font-size:16px;line-height:1;cursor:pointer;flex:none;}
+  .cal-nav[disabled]{opacity:.25;cursor:default;}
+  .cal-atalhos{display:flex;gap:6px;margin-bottom:10px;}
+  .cal-atalhos button{flex:1;background:rgba(238,240,230,.07);border:0;color:var(--muted);border-radius:8px;padding:9px 6px;font:600 11px/1 'Inter';cursor:pointer;white-space:nowrap;}
+  .cal-atalhos button:active{background:rgba(238,240,230,.14);}
+  .cal-grade{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .cal-grade .dow{font:700 9px/1 'Inter';color:var(--muted);text-align:center;padding:4px 0 8px;}
+  .cal-grade button{aspect-ratio:1;background:transparent;border:0;color:var(--line);border-radius:8px;font:500 14px/1 'Inter';cursor:pointer;padding:0;}
+  .cal-grade button:disabled{color:rgba(238,240,230,.18);cursor:default;}
+  .cal-grade button.hoje{box-shadow:inset 0 0 0 1px rgba(238,240,230,.32);}
+  .cal-grade button.sel{background:var(--ball);color:#2a0d00;font-weight:700;}
+
   /* Barra do organizador */
   .org{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:13px;border-top:1px solid rgba(238,240,230,.10);}
   .org span{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -594,6 +614,8 @@ async function criarTorneio(nome, data, ate){
     organizador: sessao.user.id
   });
   if(error) return erroT(error);
+  escolhido.tData = ''; escolhido.tAte = '';   // limpa pro próximo
+  calAberto = null; delete calMes.tData; delete calMes.tAte;
   await recarregar();
 }
 async function inscrever(nome){
@@ -613,6 +635,83 @@ async function apagarTorneio(){
   const { error } = await sb.from('torneios').delete().eq('id', torneio.id);
   if(error) return erroT(error);
   await recarregar();
+}
+
+// ── Calendário embutido ─────────────────────────────────────────
+// Troca o <input type="date">: no desktop ele vira um ícone minúsculo e
+// no celular esconde a data atrás de um popup. Aqui a grade fica à vista.
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho',
+               'julho','agosto','setembro','outubro','novembro','dezembro'];
+const DOW = ['D','S','T','Q','Q','S','S'];
+const DOW3 = ['dom','seg','ter','qua','qui','sex','sáb'];
+
+let calAberto = null;                     // qual campo está com a grade aberta
+const calMes = {};                        // mês que cada campo está mostrando
+const escolhido = { tData:'', tAte:'' };  // as datas escolhidas, em ISO
+
+const hoje = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+                                + '-' + String(d.getDate()).padStart(2, '0');
+const deIso = s => { const [a, m, d] = s.split('-').map(Number); return new Date(a, m - 1, d); };
+const porExtenso = s => { const d = deIso(s);
+  return DOW3[d.getDay()] + ', ' + d.getDate() + ' de ' + MESES[d.getMonth()]; };
+
+// A inscrição nunca pode terminar depois do próprio torneio.
+const tetoDe = id => (id === 'tAte' && escolhido.tData) ? deIso(escolhido.tData) : null;
+const refDe  = id => calMes[id] || (escolhido[id] ? deIso(escolhido[id]) : hoje());
+
+const campoData = (id, rot) =>
+  '<div class="t-campo"><span>' + rot + '</span>'
+  + '<button type="button" id="bt-' + id + '" data-cal="' + id + '" aria-expanded="false"'
+  + ' class="cal-botao' + (escolhido[id] ? '' : ' vazio') + '">'
+  + '<span id="rot-' + id + '">' + (escolhido[id] ? porExtenso(escolhido[id]) : 'escolher…') + '</span>'
+  + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"'
+  + ' stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg>'
+  + '</button><div class="cal" id="cal-' + id + '" hidden></div></div>';
+
+function atalhosHTML(id){
+  const h = hoje(), teto = tetoDe(id);
+  const amanha = new Date(h); amanha.setDate(h.getDate() + 1);
+  const sabado = new Date(h); sabado.setDate(h.getDate() + ((6 - h.getDay() + 7) % 7 || 7));
+  const op = [['Hoje', h], ['Amanhã', amanha], ['Sábado', sabado]].filter(([, d]) => !teto || d <= teto);
+  return op.length ? '<div class="cal-atalhos">' + op.map(([r, d]) =>
+    '<button type="button" data-dia="' + id + '|' + iso(d) + '">' + r + '</button>').join('') + '</div>' : '';
+}
+
+function gradeHTML(id){
+  const ref = refDe(id), ano = ref.getFullYear(), mes = ref.getMonth();
+  const piso = hoje(), teto = tetoDe(id);
+  const total = new Date(ano, mes + 1, 0).getDate();
+  let cel = DOW.map(d => '<span class="dow">' + d + '</span>').join('');
+  for(let i = 0; i < new Date(ano, mes, 1).getDay(); i++) cel += '<span></span>';
+  for(let d = 1; d <= total; d++){
+    const data = new Date(ano, mes, d), s = iso(data);
+    const bloq = data < piso || (teto && data > teto);
+    cel += '<button type="button" data-dia="' + id + '|' + s + '"' + (bloq ? ' disabled' : '')
+      + ' class="' + (s === escolhido[id] ? 'sel' : '') + (s === iso(piso) ? ' hoje' : '') + '">' + d + '</button>';
+  }
+  // Não deixa navegar para meses que já passaram por completo.
+  const podeVoltar = new Date(ano, mes, 1) > piso;
+  return '<div class="cal-topo">'
+    + '<button type="button" class="cal-nav" data-mes="' + id + '|-1"'
+    + (podeVoltar ? '' : ' disabled') + ' aria-label="Mês anterior">‹</button>'
+    + '<strong>' + MESES[mes] + ' ' + ano + '</strong>'
+    + '<button type="button" class="cal-nav" data-mes="' + id + '|1" aria-label="Próximo mês">›</button>'
+    + '</div>' + atalhosHTML(id) + '<div class="cal-grade">' + cel + '</div>';
+}
+
+// Repinta só este campo — o formulário inteiro não é redesenhado, senão
+// o nome já digitado se perderia a cada toque no calendário.
+function pintarCalendario(id){
+  const box = document.getElementById('cal-' + id);
+  if(!box) return;
+  const aberto = calAberto === id;
+  box.hidden = !aberto;
+  box.innerHTML = aberto ? gradeHTML(id) : '';
+  const rot = document.getElementById('rot-' + id);
+  if(rot) rot.textContent = escolhido[id] ? porExtenso(escolhido[id]) : 'escolher…';
+  const bt = document.getElementById('bt-' + id);
+  if(bt){ bt.classList.toggle('vazio', !escolhido[id]); bt.setAttribute('aria-expanded', String(aberto)); }
 }
 
 // ── Desenho da tela do torneio ──────────────────────────────────
@@ -659,8 +758,8 @@ function semTorneioHTML(){
     + '<p class="t-sub">Você fica como organizador — só você sorteia e lança os resultados.</p>'
     + '<div style="margin-top:13px">'
     + campo('tNome', 'Nome', 'text', 'Ex.: Torneio do Cantim')
-    + campo('tData', 'Data do torneio', 'date', '')
-    + campo('tAte', 'Inscrições até', 'date', '')
+    + campoData('tData', 'Data do torneio')
+    + campoData('tAte', 'Inscrições até')
     + '<button class="btn" data-acao="criar">Criar torneio</button></div></div>';
 }
 
@@ -765,6 +864,33 @@ function orgHTML(){
 
 // ── Eventos do torneio ──────────────────────────────────────────
 tApp.addEventListener('click', async e => {
+  // Calendário: escolher um dia, virar o mês, abrir/fechar a grade.
+  const dia = e.target.closest('[data-dia]');
+  if(dia){
+    const [id, s] = dia.dataset.dia.split('|');
+    escolhido[id] = s;
+    // Mexeu na data do torneio? A inscrição não pode ficar depois dela.
+    if(id === 'tData' && escolhido.tAte && escolhido.tAte > s) escolhido.tAte = s;
+    calAberto = null;
+    pintarCalendario(id);
+    if(id === 'tData') pintarCalendario('tAte');
+    return;
+  }
+  const mes = e.target.closest('[data-mes]');
+  if(mes){
+    const [id, passo] = mes.dataset.mes.split('|');
+    const r = refDe(id);
+    calMes[id] = new Date(r.getFullYear(), r.getMonth() + Number(passo), 1);
+    return pintarCalendario(id);
+  }
+  const cal = e.target.closest('[data-cal]');
+  if(cal){
+    const id = cal.dataset.cal, antes = calAberto;
+    calAberto = calAberto === id ? null : id;
+    if(antes && antes !== id) pintarCalendario(antes);   // fecha o outro
+    return pintarCalendario(id);
+  }
+
   const v = e.target.closest('[data-venceu]');
   if(v){ const [pid, jid] = v.dataset.venceu.split('|'); return definirVencedor(pid, jid); }
   const t = e.target.closest('[data-tirar]');
@@ -778,7 +904,7 @@ tApp.addEventListener('click', async e => {
       return sb.auth.signInWithOAuth({ provider:'google',
         options:{ redirectTo: location.origin + location.pathname } });
     case 'sair':      await sb.auth.signOut(); return recarregar();
-    case 'criar':     return criarTorneio(val('tNome'), val('tData'), val('tAte'));
+    case 'criar':     return criarTorneio(val('tNome'), escolhido.tData, escolhido.tAte);
     case 'inscrever': return inscrever(val('tNovoNome'));
     case 'sortear':   return sortear();
     case 'chave':     return gerarChave();
